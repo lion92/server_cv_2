@@ -1,138 +1,115 @@
 const express = require('express');
-const cors = require('cors');
-const PDFDocument = require('pdfkit');
-const path = require('path');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
+const bodyParser = require('body-parser');
+const path = require('path');
 
-// Configurer Multer pour le stockage des images téléchargées
-const upload = multer({ dest: 'uploads/' });
-
-// Créer l'application Express
 const app = express();
 
-// Utiliser CORS pour autoriser toutes les origines
-app.use(cors());
-
-// Middleware pour parser les requêtes JSON et urlencoded
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Servir les fichiers statiques à partir du dossier "public"
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// Route GET pour servir la page d'accueil
+// Middleware pour parser les données du formulaire
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Route POST pour générer le PDF
+// Configurer Multer pour gérer le téléchargement des photos
+const upload = multer({ dest: 'uploads/' });
+
+// Route pour générer le CV en PDF
 app.post('/generate-cv', upload.single('photo'), (req, res) => {
-    const { nom, prenom, adresse, email, experiences, formations, loisirs } = req.body;
-    const photo = req.file;  // Récupérer la photo téléchargée
+    const { nom, prenom, adresse, email } = req.body;
 
-    // Vérifier si les champs sont fournis
-    if (!nom || !prenom || !adresse || !email || !experiences || !formations || !loisirs || !photo) {
-        return res.status(400).send('Tous les champs sont requis');
-    }
+    // Expériences et Formations avec dates de début et fin
+    const experienceStartDates = req.body.experienceStartDate || [];
+    const experienceEndDates = req.body.experienceEndDate || [];
+    const experienceLieux = req.body.experienceLieu || [];
+    const experienceDescriptions = req.body.experienceDescription || [];
 
-    // Créer un nouveau document PDF
+    const formationStartDates = req.body.formationStartDate || [];
+    const formationEndDates = req.body.formationEndDate || [];
+    const formationLieux = req.body.formationLieu || [];
+    const formationDescriptions = req.body.formationDescription || [];
+
+    // Loisirs (récupérés sous forme de tableau)
+    const loisirs = req.body.loisir || [];
+
+    // Création du PDF avec marges
     const doc = new PDFDocument({ margin: 50 });
 
-    // Configurer l'en-tête de réponse pour le fichier PDF
+    // En-tête pour téléchargement
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=cv.pdf');
 
-    // Pipe le flux PDF dans la réponse
+    // Pipe vers la réponse HTTP
     doc.pipe(res);
 
-    // Couleurs pour le CV
-    const primaryColor = '#00796b'; // Vert
-    const secondaryColor = '#f4f4f4'; // Gris clair
-    const textColor = '#333333'; // Gris foncé
+    // Ajouter un cadre bleu en haut
+    doc.rect(0, 0, doc.page.width, 80)
+        .fill('#007bff');
 
-    // Ajouter un fond coloré pour l'en-tête
-    doc
-        .rect(0, 0, doc.page.width, 100)
-        .fill(primaryColor);
+    // Bordure autour du CV (liseré)
+    const borderWidth = 2;
+    doc.rect(borderWidth / 2, borderWidth / 2, doc.page.width - borderWidth, doc.page.height - borderWidth)
+        .stroke('#007bff');
 
-    // Ajouter le nom et prénom en haut du CV
-    doc
-        .fillColor('white')
-        .fontSize(30)
-        .font('Helvetica-Bold')
-        .text(`${prenom} ${nom}`, 50, 30, { align: 'left' });
+    // Texte centré dans le cadre bleu
+    doc.fillColor('white').fontSize(25).text(`${prenom} ${nom}`, { align: 'center', baseline: 'middle', height: 80 });
+    doc.moveDown(1);
 
-    // Ajouter l'adresse et l'email sous le nom
-    doc
-        .fillColor('white')
-        .fontSize(14)
-        .text(`Adresse : ${adresse}`, 50, 70)
-        .text(`Email : ${email}`, 50, 90);
+    // Informations personnelles sous le cadre
+    doc.fillColor('black').fontSize(12).text(`Adresse: ${adresse}`, { align: 'center' });
+    doc.text(`Email: ${email}`, { align: 'center' });
 
-    // Ajouter la photo du CV
-    if (photo) {
-        doc.image(photo.path, doc.page.width - 150, 30, {
-            fit: [100, 100],
-            align: 'right',
-            valign: 'top'
-        });
+    // Ajouter la photo
+    if (req.file) {
+        try {
+            const imgPath = path.join(__dirname, req.file.path);
+            doc.image(imgPath, 450, 100, { width: 100, height: 100 });
+        } catch (error) {
+            console.error('Erreur avec l\'image :', error);
+        }
     }
 
-    // Ajouter une ligne sous l'en-tête
-    doc
-        .moveTo(50, 110)
-        .lineTo(doc.page.width - 50, 110)
-        .stroke(primaryColor);
+    doc.moveDown(2);
 
-    // Section Expériences
-    doc
-        .moveDown(2)
-        .fillColor(textColor)
-        .fontSize(20)
-        .text('Expériences professionnelles', { underline: true })
-        .moveDown(0.5);
-    experiences.split('\n').forEach(exp => {
-        doc.fontSize(14).text(`- ${exp}`).moveDown(0.5);
+    // Section Expériences Professionnelles avec Dates de Début et Fin
+    doc.fontSize(16).fillColor('#007bff').text('Expériences Professionnelles', { underline: true });
+    doc.moveDown(1);
+
+    // Expériences avec mise en page soignée
+    experienceStartDates.forEach((startDate, index) => {
+        doc.fontSize(12).fillColor('black').text(`${startDate} - ${experienceEndDates[index]} : ${experienceLieux[index]}`, { bold: true });
+        doc.fontSize(12).fillColor('gray').text(experienceDescriptions[index], { indent: 40 });
+        doc.moveDown(1);
     });
 
-    // Ajouter une séparation entre les sections
-    doc
-        .moveDown(1)
-        .rect(50, doc.y, doc.page.width - 100, 1)
-        .fill(primaryColor)
-        .moveDown(1);
-
-    // Section Formations
-    doc
-        .fillColor(textColor)
-        .fontSize(20)
-        .text('Formations', { underline: true })
-        .moveDown(0.5);
-    formations.split('\n').forEach(formation => {
-        doc.fontSize(14).text(`- ${formation}`).moveDown(0.5);
+    // Section Formations avec Dates de Début et Fin
+    doc.fontSize(16).fillColor('#007bff').text('Formations', { underline: true });
+    doc.moveDown(1);
+    formationStartDates.forEach((startDate, index) => {
+        doc.fontSize(12).fillColor('black').text(`${startDate} - ${formationEndDates[index]} : ${formationLieux[index]}`, { bold: true });
+        doc.fontSize(12).fillColor('gray').text(formationDescriptions[index], { indent: 40 });
+        doc.moveDown(1);
     });
-
-    // Ajouter une autre séparation
-    doc
-        .moveDown(1)
-        .rect(50, doc.y, doc.page.width - 100, 1)
-        .fill(primaryColor)
-        .moveDown(1);
 
     // Section Loisirs
-    doc
-        .fillColor(textColor)
-        .fontSize(20)
-        .text('Loisirs', { underline: true })
-        .moveDown(0.5);
-    doc.fontSize(14).text(loisirs);
+    doc.fontSize(16).fillColor('#007bff').text('Loisirs', { underline: true });
+    doc.moveDown(1);
+    loisirs.forEach((loisir, index) => {
+        doc.fontSize(12).fillColor('black').text(`- ${loisir}`);
+        doc.moveDown(0.5);
+    });
 
-    // Finaliser le PDF et l'envoyer
+    // Footer type Bootstrap
+    doc.moveDown(2);
+
+    // Terminer et finaliser le PDF
     doc.end();
 });
 
 // Démarrer le serveur
-const PORT = process.env.PORT || 3010;
+const PORT = 3010;
 app.listen(PORT, () => {
     console.log(`Serveur démarré sur le port ${PORT}`);
 });
-

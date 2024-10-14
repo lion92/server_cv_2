@@ -65,55 +65,147 @@
         .error {
             color: red;
         }
+        .experience, .formation, .loisir {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Générateur de CV PDF</h1>
-        <form id="cvForm" enctype="multipart/form-data">
-            <label for="nom">Nom :</label>
-            <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
+<div class="container">
+    <h1>Générateur de CV PDF</h1>
+    <form id="cvForm" enctype="multipart/form-data">
+        <label for="nom">Nom :</label>
+        <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
 
-            <label for="prenom">Prénom :</label>
-            <input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
+        <label for="prenom">Prénom :</label>
+        <input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
 
-            <label for="adresse">Adresse :</label>
-            <input type="text" id="adresse" name="adresse" placeholder="Votre adresse" required>
+        <label for="adresse">Adresse :</label>
+        <input type="text" id="adresse" name="adresse" placeholder="Votre adresse" required>
 
-            <label for="email">Email :</label>
-            <input type="email" id="email" name="email" placeholder="Votre email" required>
+        <label for="email">Email :</label>
+        <input type="email" id="email" name="email" placeholder="Votre email" required>
 
-            <label for="photo">Photo :</label>
-            <input type="file" id="photo" name="photo" accept="image/*" required>
+        <label for="photo">Photo :</label>
+        <input type="file" id="photo" name="photo" accept="image/*" required>
 
-            <label for="experiences">Expériences professionnelles :</label>
-            <textarea id="experiences" name="experiences" placeholder="Décrivez vos expériences, séparées par des sauts de ligne" required></textarea>
+        <h2>Expériences professionnelles :</h2>
+        <div id="experience-container">
+            <div class="experience">
+                <label>Date de début :</label>
+                <input type="date" name="experienceStartDate[]" required><br>
 
-            <label for="formations">Formations :</label>
-            <textarea id="formations" name="formations" placeholder="Décrivez vos formations, séparées par des sauts de ligne" required></textarea>
+                <label>Date de fin :</label>
+                <input type="date" name="experienceEndDate[]" required><br>
 
-            <label for="loisirs">Loisirs :</label>
-            <textarea id="loisirs" name="loisirs" placeholder="Vos loisirs" required></textarea>
+                <label>Lieu :</label>
+                <input type="text" name="experienceLieu[]" required><br>
 
-            <button type="submit">Générer le CV en PDF</button>
+                <label>Description :</label>
+                <textarea name="experienceDescription[]" required></textarea><br>
+            </div>
+        </div>
+        <button type="button" onclick="addExperience()">Ajouter une expérience</button>
 
-            <div class="success" id="successMessage" style="display: none;">Le PDF a été généré et téléchargé avec succès !</div>
-            <div class="error" id="errorMessage" style="display: none;">Erreur lors de la génération du PDF.</div>
-        </form>
-    </div>
+        <h2>Formations :</h2>
+        <div id="formation-container">
+            <div class="formation">
+                <label>Date de début :</label>
+                <input type="date" name="formationStartDate[]" required><br>
 
-    <script>
-        document.getElementById('cvForm').addEventListener('submit', function (event) {
-            event.preventDefault();  // Empêcher la soumission par défaut du formulaire
+                <label>Date de fin :</label>
+                <input type="date" name="formationEndDate[]" required><br>
 
-            // Créer un objet FormData pour gérer les fichiers
-            const formData = new FormData(this);
+                <label>Lieu :</label>
+                <input type="text" name="formationLieu[]" required><br>
 
-            // Envoyer les données au serveur via fetch API
-            fetch('https://www.krisscode.fr/cvgenerator/generate-cv', {
-                method: 'POST',
-                body: formData  // Envoyer le fichier et les autres champs
-            })
+                <label>Description :</label>
+                <textarea name="formationDescription[]" required></textarea><br>
+            </div>
+        </div>
+        <button type="button" onclick="addFormation()">Ajouter une formation</button>
+
+        <h2>Loisirs :</h2>
+        <div id="loisir-container">
+            <div class="loisir">
+                <label>Loisir :</label>
+                <input type="text" name="loisir[]" placeholder="Ex : Lecture, Musique" required><br>
+            </div>
+        </div>
+        <button type="button" onclick="addLoisir()">Ajouter un loisir</button>
+
+        <button type="submit">Générer le CV en PDF</button>
+
+        <div class="success" id="successMessage" style="display: none;">Le PDF a été généré et téléchargé avec succès !</div>
+        <div class="error" id="errorMessage" style="display: none;">Erreur lors de la génération du PDF.</div>
+    </form>
+</div>
+
+<script>
+    function addExperience() {
+        const experienceContainer = document.getElementById('experience-container');
+        const newExperience = document.createElement('div');
+        newExperience.classList.add('experience');
+        newExperience.innerHTML = `
+                <label>Date de début :</label>
+                <input type="date" name="experienceStartDate[]" required><br>
+
+                <label>Date de fin :</label>
+                <input type="date" name="experienceEndDate[]" required><br>
+
+                <label>Lieu :</label>
+                <input type="text" name="experienceLieu[]" required><br>
+
+                <label>Description :</label>
+                <textarea name="experienceDescription[]" required></textarea><br>
+            `;
+        experienceContainer.appendChild(newExperience);
+    }
+
+    function addFormation() {
+        const formationContainer = document.getElementById('formation-container');
+        const newFormation = document.createElement('div');
+        newFormation.classList.add('formation');
+        newFormation.innerHTML = `
+                <label>Date de début :</label>
+                <input type="date" name="formationStartDate[]" required><br>
+
+                <label>Date de fin :</label>
+                <input type="date" name="formationEndDate[]" required><br>
+
+                <label>Lieu :</label>
+                <input type="text" name="formationLieu[]" required><br>
+
+                <label>Description :</label>
+                <textarea name="formationDescription[]" required></textarea><br>
+            `;
+        formationContainer.appendChild(newFormation);
+    }
+
+    function addLoisir() {
+        const loisirContainer = document.getElementById('loisir-container');
+        const newLoisir = document.createElement('div');
+        newLoisir.classList.add('loisir');
+        newLoisir.innerHTML = `
+                <label>Loisir :</label>
+                <input type="text" name="loisir[]" placeholder="Ex : Lecture, Musique" required><br>
+            `;
+        loisirContainer.appendChild(newLoisir);
+    }
+
+    document.getElementById('cvForm').addEventListener('submit', function (event) {
+        event.preventDefault();  // Empêche la soumission par défaut du formulaire
+
+        // Créer un objet FormData pour gérer les fichiers
+        const formData = new FormData(this);
+
+        // Envoyer les données au serveur via fetch API
+        fetch('http://localhost:3010/generate-cv', {
+            method: 'POST',
+            body: formData  // Envoyer le fichier et les autres champs
+        })
             .then(response => {
                 if (response.ok) {
                     return response.blob();  // Récupérer le PDF sous forme de blob
@@ -138,8 +230,7 @@
                 document.getElementById('successMessage').style.display = 'none';
                 document.getElementById('errorMessage').style.display = 'block';
             });
-        });
-    </script>
+    });
+</script>
 </body>
 </html>
-
