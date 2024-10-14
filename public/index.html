@@ -70,7 +70,7 @@
 <body>
     <div class="container">
         <h1>Générateur de CV PDF</h1>
-        <form id="cvForm">
+        <form id="cvForm" enctype="multipart/form-data">
             <label for="nom">Nom :</label>
             <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
 
@@ -82,6 +82,9 @@
 
             <label for="email">Email :</label>
             <input type="email" id="email" name="email" placeholder="Votre email" required>
+
+            <label for="photo">Photo :</label>
+            <input type="file" id="photo" name="photo" accept="image/*" required>
 
             <label for="experiences">Expériences professionnelles :</label>
             <textarea id="experiences" name="experiences" placeholder="Décrivez vos expériences, séparées par des sauts de ligne" required></textarea>
@@ -103,33 +106,13 @@
         document.getElementById('cvForm').addEventListener('submit', function (event) {
             event.preventDefault();  // Empêcher la soumission par défaut du formulaire
 
-            // Récupérer les données du formulaire
-            const nom = document.getElementById('nom').value;
-            const prenom = document.getElementById('prenom').value;
-            const adresse = document.getElementById('adresse').value;
-            const email = document.getElementById('email').value;
-            const experiences = document.getElementById('experiences').value;
-            const formations = document.getElementById('formations').value;
-            const loisirs = document.getElementById('loisirs').value;
-
-            // Créer un objet avec les données du formulaire
-            const data = {
-                nom,
-                prenom,
-                adresse,
-                email,
-                experiences,
-                formations,
-                loisirs
-            };
+            // Créer un objet FormData pour gérer les fichiers
+            const formData = new FormData(this);
 
             // Envoyer les données au serveur via fetch API
             fetch('https://www.krisscode.fr/cvgenerator/generate-cv', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
+                body: formData  // Envoyer le fichier et les autres champs
             })
             .then(response => {
                 if (response.ok) {
