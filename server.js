@@ -18,7 +18,7 @@ const upload = multer({ dest: 'uploads/' });
 
 // Route pour générer le CV en PDF
 app.post('/generate-cv', upload.single('photo'), (req, res) => {
-    const { nom, prenom, adresse, email, telephone, profil, headerColor, textColor, separatorColor } = req.body;
+    const { nom, prenom, adresse, email, telephone, profil, certifications } = req.body;
 
     // Expériences et Formations avec dates de début et fin
     const experienceStartDates = req.body.experienceStartDate || [];
@@ -31,8 +31,8 @@ app.post('/generate-cv', upload.single('photo'), (req, res) => {
     const formationLieux = req.body.formationLieu || [];
     const formationDescriptions = req.body.formationDescription || [];
 
-    // Certifications et Loisirs
-    const certifications = req.body.certification || [];
+    // Compétences techniques et loisirs (récupérés sous forme de tableau)
+    const competences = req.body.competence || [];
     const loisirs = req.body.loisir || [];
 
     // Création du PDF avec marges
@@ -40,22 +40,26 @@ app.post('/generate-cv', upload.single('photo'), (req, res) => {
 
     // En-tête pour téléchargement
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=cv-${prenom}-${nom}.pdf`);
+    res.setHeader('Content-Disposition', 'attachment; filename=cv-emmanuel-frenot.pdf');
 
     // Pipe vers la réponse HTTP
     doc.pipe(res);
 
-    // Ajouter un cadre coloré en haut (couleur personnalisée)
+    // Ajouter un cadre bleu en haut
     doc.rect(0, 0, doc.page.width, 80)
-        .fill(headerColor || '#007bff') // Utiliser la couleur choisie pour l'en-tête, ou la valeur par défaut
-        .stroke();
+        .fill('#007bff');
 
-    // Texte centré dans l'en-tête
+    // Bordure autour du CV (liseré)
+    const borderWidth = 2;
+    doc.rect(borderWidth / 2, borderWidth / 2, doc.page.width - borderWidth, doc.page.height - borderWidth)
+        .stroke('#007bff');
+
+    // Texte centré dans le cadre bleu
     doc.fillColor('white').fontSize(25).text(`${prenom} ${nom}`, { align: 'center', baseline: 'middle', height: 80 });
     doc.moveDown(1);
 
     // Informations personnelles sous le cadre
-    doc.fillColor(textColor || 'black').fontSize(12).text(`Adresse: ${adresse}`, { align: 'center' });
+    doc.fillColor('black').fontSize(12).text(`Adresse: ${adresse}`, { align: 'center' });
     doc.text(`Email: ${email}`, { align: 'center' });
     doc.text(`Téléphone: ${telephone}`, { align: 'center' });
 
@@ -72,48 +76,52 @@ app.post('/generate-cv', upload.single('photo'), (req, res) => {
     doc.moveDown(2);
 
     // Profil professionnel
-    doc.fontSize(16).fillColor(headerColor || '#007bff').text('Profil professionnel', { underline: true });
+    doc.fontSize(16).fillColor('#007bff').text('Profil professionnel', { underline: true });
     doc.moveDown(1);
-    doc.fontSize(12).fillColor(textColor || 'black').text(profil, { align: 'left' });
+    doc.fontSize(12).fillColor('black').text(profil, { align: 'left' });
     doc.moveDown(2);
 
-    // Expériences professionnelles
-    doc.fontSize(16).fillColor(headerColor || '#007bff').text('Expériences professionnelles', { underline: true });
+    // Section Expériences Professionnelles avec Dates de Début et Fin
+    doc.fontSize(16).fillColor('#007bff').text('Expériences Professionnelles', { underline: true });
     doc.moveDown(1);
+
     experienceStartDates.forEach((startDate, index) => {
-        doc.fontSize(12).fillColor(textColor || 'black').text(`${startDate} - ${experienceEndDates[index]} : ${experienceLieux[index]}`);
-        doc.fontSize(12).fillColor(textColor || 'gray').text(experienceDescriptions[index], { indent: 40 });
+        doc.fontSize(12).fillColor('black').text(`${startDate} - ${experienceEndDates[index]} : ${experienceLieux[index]}`, { bold: true });
+        doc.fontSize(12).fillColor('gray').text(experienceDescriptions[index], { indent: 40 });
         doc.moveDown(1);
     });
 
-    // Formations
-    doc.fontSize(16).fillColor(headerColor || '#007bff').text('Formations', { underline: true });
+    // Section Formations avec Dates de Début et Fin
+    doc.fontSize(16).fillColor('#007bff').text('Formations', { underline: true });
     doc.moveDown(1);
     formationStartDates.forEach((startDate, index) => {
-        doc.fontSize(12).fillColor(textColor || 'black').text(`${startDate} - ${formationEndDates[index]} : ${formationLieux[index]}`);
-        doc.fontSize(12).fillColor(textColor || 'gray').text(formationDescriptions[index], { indent: 40 });
+        doc.fontSize(12).fillColor('black').text(`${startDate} - ${formationEndDates[index]} : ${formationLieux[index]}`, { bold: true });
+        doc.fontSize(12).fillColor('gray').text(formationDescriptions[index], { indent: 40 });
         doc.moveDown(1);
     });
 
-    // Certifications
-    if (certifications.length > 0) {
-        doc.fontSize(16).fillColor(headerColor || '#007bff').text('Certifications', { underline: true });
+    // Section Compétences Techniques
+    doc.fontSize(16).fillColor('#007bff').text('Compétences Techniques', { underline: true });
+    doc.moveDown(1);
+    competences.forEach(competence => {
+        doc.fontSize(12).fillColor('black').text(`• ${competence}`);
+        doc.moveDown(0.5);
+    });
+
+    // Section Certifications
+    if (certifications) {
+        doc.fontSize(16).fillColor('#007bff').text('Certifications', { underline: true });
         doc.moveDown(1);
-        certifications.forEach(cert => {
-            doc.fontSize(12).fillColor(textColor || 'black').text(`- ${cert}`);
-            doc.moveDown(0.5);
-        });
+        doc.fontSize(12).fillColor('black').text(certifications, { align: 'left' });
     }
 
-    // Loisirs
-    if (loisirs.length > 0) {
-        doc.fontSize(16).fillColor(headerColor || '#007bff').text('Loisirs', { underline: true });
-        doc.moveDown(1);
-        loisirs.forEach(loisir => {
-            doc.fontSize(12).fillColor(textColor || 'black').text(`- ${loisir}`);
-            doc.moveDown(0.5);
-        });
-    }
+    // Section Loisirs
+    doc.fontSize(16).fillColor('#007bff').text('Loisirs', { underline: true });
+    doc.moveDown(1);
+    loisirs.forEach(loisir => {
+        doc.fontSize(12).fillColor('black').text(`- ${loisir}`);
+        doc.moveDown(0.5);
+    });
 
     // Footer type Bootstrap
     doc.moveDown(2);
