@@ -7,75 +7,46 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
+            background-color: #f0f0f0;
             padding: 20px;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: #fff;
+            background: #ffffff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        h1 {
-            text-align: center;
-            color: #333;
+        label, input, textarea {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
         }
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-        label {
-            margin: 10px 0 5px;
-            font-weight: bold;
-        }
-        input, textarea {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-        textarea {
-            resize: vertical;
-            height: 100px;
+        input[type="color"] {
+            width: 50%;
         }
         button {
-            padding: 15px;
-            background-color: #28a745;
+            padding: 10px 20px;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 4px;
-            font-size: 16px;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #218838;
-        }
-        .success, .error {
-            text-align: center;
-            font-size: 18px;
-            margin-top: 20px;
-        }
-        .success {
-            color: green;
-        }
-        .error {
-            color: red;
-        }
-        .experience, .formation, .loisir {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h1>Générateur de CV PDF</h1>
-    <form id="cvForm" enctype="multipart/form-data">
+    <form id="cvForm" action="http://localhost:3010/generate-cv" method="POST" enctype="multipart/form-data">
         <label for="nom">Nom :</label>
         <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
 
@@ -85,152 +56,155 @@
         <label for="adresse">Adresse :</label>
         <input type="text" id="adresse" name="adresse" placeholder="Votre adresse" required>
 
+        <label for="telephone">Téléphone :</label>
+        <input type="tel" id="telephone" name="telephone" placeholder="Votre téléphone" required>
+
         <label for="email">Email :</label>
         <input type="email" id="email" name="email" placeholder="Votre email" required>
+
+        <label for="profil">Profil professionnel :</label>
+        <textarea id="profil" name="profil" placeholder="Décrivez votre profil professionnel" required></textarea>
 
         <label for="photo">Photo :</label>
         <input type="file" id="photo" name="photo" accept="image/*" required>
 
-        <h2>Expériences professionnelles :</h2>
-        <div id="experience-container">
-            <div class="experience">
-                <label>Date de début :</label>
-                <input type="date" name="experienceStartDate[]" required><br>
+        <!-- Expériences professionnelles -->
+        <div class="section">
+            <h3>Expériences professionnelles</h3>
+            <div id="experience-container">
+                <div class="experience">
+                    <label for="experienceStartDate">Date de début :</label>
+                    <input type="date" name="experienceStartDate[]" required>
 
-                <label>Date de fin :</label>
-                <input type="date" name="experienceEndDate[]" required><br>
+                    <label for="experienceEndDate">Date de fin :</label>
+                    <input type="date" name="experienceEndDate[]" required>
 
-                <label>Lieu :</label>
-                <input type="text" name="experienceLieu[]" required><br>
+                    <label for="experienceLieu">Lieu :</label>
+                    <input type="text" name="experienceLieu[]" required>
 
-                <label>Description :</label>
-                <textarea name="experienceDescription[]" required></textarea><br>
+                    <label for="experienceDescription">Description :</label>
+                    <textarea name="experienceDescription[]" required></textarea>
+                </div>
             </div>
+            <button type="button" onclick="addExperience()">Ajouter une expérience</button>
         </div>
-        <button type="button" onclick="addExperience()">Ajouter une expérience</button>
 
-        <h2>Formations :</h2>
-        <div id="formation-container">
-            <div class="formation">
-                <label>Date de début :</label>
-                <input type="date" name="formationStartDate[]" required><br>
+        <!-- Formations -->
+        <div class="section">
+            <h3>Formations</h3>
+            <div id="formation-container">
+                <div class="formation">
+                    <label for="formationStartDate">Date de début :</label>
+                    <input type="date" name="formationStartDate[]" required>
 
-                <label>Date de fin :</label>
-                <input type="date" name="formationEndDate[]" required><br>
+                    <label for="formationEndDate">Date de fin :</label>
+                    <input type="date" name="formationEndDate[]" required>
 
-                <label>Lieu :</label>
-                <input type="text" name="formationLieu[]" required><br>
+                    <label for="formationLieu">Lieu :</label>
+                    <input type="text" name="formationLieu[]" required>
 
-                <label>Description :</label>
-                <textarea name="formationDescription[]" required></textarea><br>
+                    <label for="formationDescription">Description :</label>
+                    <textarea name="formationDescription[]" required></textarea>
+                </div>
             </div>
+            <button type="button" onclick="addFormation()">Ajouter une formation</button>
         </div>
-        <button type="button" onclick="addFormation()">Ajouter une formation</button>
 
-        <h2>Loisirs :</h2>
-        <div id="loisir-container">
-            <div class="loisir">
-                <label>Loisir :</label>
-                <input type="text" name="loisir[]" placeholder="Ex : Lecture, Musique" required><br>
+        <!-- Certifications -->
+        <div class="section">
+            <h3>Certifications</h3>
+            <div id="certification-container">
+                <div class="certification">
+                    <label for="certification">Certification :</label>
+                    <input type="text" name="certification[]" required>
+                </div>
             </div>
+            <button type="button" onclick="addCertification()">Ajouter une certification</button>
         </div>
-        <button type="button" onclick="addLoisir()">Ajouter un loisir</button>
 
-        <button type="submit">Générer le CV en PDF</button>
+        <!-- Loisirs -->
+        <div class="section">
+            <h3>Loisirs</h3>
+            <div id="loisir-container">
+                <div class="loisir">
+                    <label for="loisir">Loisir :</label>
+                    <input type="text" name="loisir[]" required>
+                </div>
+            </div>
+            <button type="button" onclick="addLoisir()">Ajouter un loisir</button>
+        </div>
 
-        <div class="success" id="successMessage" style="display: none;">Le PDF a été généré et téléchargé avec succès !</div>
-        <div class="error" id="errorMessage" style="display: none;">Erreur lors de la génération du PDF.</div>
+        <h2>Personnaliser les couleurs du CV</h2>
+        <label for="headerColor">Couleur de l'en-tête :</label>
+        <input type="color" id="headerColor" name="headerColor" value="#007bff">
+
+        <label for="textColor">Couleur du texte :</label>
+        <input type="color" id="textColor" name="textColor" value="#000000">
+
+        <label for="separatorColor">Couleur des séparateurs :</label>
+        <input type="color" id="separatorColor" name="separatorColor" value="#cccccc">
+
+        <button type="submit">Générer le CV</button>
     </form>
 </div>
 
 <script>
     function addExperience() {
-        const experienceContainer = document.getElementById('experience-container');
+        const container = document.getElementById('experience-container');
         const newExperience = document.createElement('div');
         newExperience.classList.add('experience');
         newExperience.innerHTML = `
-                <label>Date de début :</label>
-                <input type="date" name="experienceStartDate[]" required><br>
-
-                <label>Date de fin :</label>
-                <input type="date" name="experienceEndDate[]" required><br>
-
-                <label>Lieu :</label>
-                <input type="text" name="experienceLieu[]" required><br>
-
-                <label>Description :</label>
-                <textarea name="experienceDescription[]" required></textarea><br>
-            `;
-        experienceContainer.appendChild(newExperience);
+            <label for="experienceStartDate">Date de début :</label>
+            <input type="date" name="experienceStartDate[]" required>
+            <label for="experienceEndDate">Date de fin :</label>
+            <input type="date" name="experienceEndDate[]" required>
+            <label for="experienceLieu">Lieu :</label>
+            <input type="text" name="experienceLieu[]" required>
+            <label for="experienceDescription">Description :</label>
+            <textarea name="experienceDescription[]" required></textarea>
+        `;
+        container.appendChild(newExperience);
     }
 
     function addFormation() {
-        const formationContainer = document.getElementById('formation-container');
+        const container = document.getElementById('formation-container');
         const newFormation = document.createElement('div');
         newFormation.classList.add('formation');
         newFormation.innerHTML = `
-                <label>Date de début :</label>
-                <input type="date" name="formationStartDate[]" required><br>
+            <label for="formationStartDate">Date de début :</label>
+            <input type="date" name="formationStartDate[]" required>
+            <label for="formationEndDate">Date de fin :</label>
+            <input type="date" name="formationEndDate[]" required>
+            <label for="formationLieu">Lieu :</label>
+            <input type="text" name="formationLieu[]" required>
+            <label for="formationDescription">Description :</label>
+            <textarea name="formationDescription[]" required></textarea>
+        `;
+        container.appendChild(newFormation);
+    }
 
-                <label>Date de fin :</label>
-                <input type="date" name="formationEndDate[]" required><br>
-
-                <label>Lieu :</label>
-                <input type="text" name="formationLieu[]" required><br>
-
-                <label>Description :</label>
-                <textarea name="formationDescription[]" required></textarea><br>
-            `;
-        formationContainer.appendChild(newFormation);
+    function addCertification() {
+        const container = document.getElementById('certification-container');
+        const newCertification = document.createElement('div');
+        newCertification.classList.add('certification');
+        newCertification.innerHTML = `
+            <label for="certification">Certification :</label>
+            <input type="text" name="certification[]" required>
+        `;
+        container.appendChild(newCertification);
     }
 
     function addLoisir() {
-        const loisirContainer = document.getElementById('loisir-container');
+        const container = document.getElementById('loisir-container');
         const newLoisir = document.createElement('div');
         newLoisir.classList.add('loisir');
         newLoisir.innerHTML = `
-                <label>Loisir :</label>
-                <input type="text" name="loisir[]" placeholder="Ex : Lecture, Musique" required><br>
-            `;
-        loisirContainer.appendChild(newLoisir);
+            <label for="loisir">Loisir :</label>
+            <input type="text" name="loisir[]" required>
+        `;
+        container.appendChild(newLoisir);
     }
-
-    document.getElementById('cvForm').addEventListener('submit', function (event) {
-        event.preventDefault();  // Empêche la soumission par défaut du formulaire
-
-        // Créer un objet FormData pour gérer les fichiers
-        const formData = new FormData(this);
-
-        // Envoyer les données au serveur via fetch API
-        fetch('http://localhost:3010/generate-cv', {
-            method: 'POST',
-            body: formData  // Envoyer le fichier et les autres champs
-        })
-            .then(response => {
-                if (response.ok) {
-                    return response.blob();  // Récupérer le PDF sous forme de blob
-                } else {
-                    throw new Error('Erreur lors de la génération du PDF');
-                }
-            })
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'cv.pdf';
-                a.click();  // Télécharger le fichier PDF
-
-                // Afficher un message de succès
-                document.getElementById('successMessage').style.display = 'block';
-                document.getElementById('errorMessage').style.display = 'none';
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                // Afficher un message d'erreur
-                document.getElementById('successMessage').style.display = 'none';
-                document.getElementById('errorMessage').style.display = 'block';
-            });
-    });
 </script>
+
 </body>
 </html>
